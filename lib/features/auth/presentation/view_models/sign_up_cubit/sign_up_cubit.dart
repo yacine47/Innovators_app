@@ -17,30 +17,29 @@ class SignUpCubit extends Cubit<SignUpState> {
 
     // var result = await authRepo.login(email: email, password: password);
 
-    UserModel? userModel;
-    Hive.box<UserModel>(kPostsBox).add(UserModel(
+    UserModel userModel = UserModel(
       id: '1',
       name: fullName,
       email: email,
       password: password,
       profileImageUrl:
           'https://static.vecteezy.com/system/resources/previews/020/911/740/non_2x/user-profile-icon-profile-avatar-user-icon-male-icon-face-icon-profile-icon-free-png.png',
-    ));
+    );
+    await Hive.box<UserModel>(kUsersBox).add(userModel);
 
-    users.where((e) => e.email == email).forEach((element) {
-      if (element.password == password) {
-        userModel = element;
-      }
-    });
-    if (userModel == null) {
-      emit(SignUpFailure('Somthing is wrong'));
-    } else {
-      Hive.box(kSettingsBox).put(
-        'user',
-        userModel,
-      );
-      emit(SignUpSuccess(userModel!));
-    }
+    await Hive.box(kSettingsBox).put(
+      'user',
+      UserModel(
+        id: '1',
+        name: fullName,
+        email: email,
+        password: password,
+        profileImageUrl:
+            'https://static.vecteezy.com/system/resources/previews/020/911/740/non_2x/user-profile-icon-profile-avatar-user-icon-male-icon-face-icon-profile-icon-free-png.png',
+      ),
+    );
+
+    emit(SignUpSuccess(userModel));
 
     // result.fold(
     //   (failure) => emit(LoginFailure(failure.error)),

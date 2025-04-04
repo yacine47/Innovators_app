@@ -20,6 +20,8 @@ class LoginCubit extends Cubit<LoginState> {
     // var result = await authRepo.login(email: email, password: password);
 
     UserModel? userModel;
+
+    List<UserModel> users = Hive.box<UserModel>(kUsersBox).values.toList();
     users.where((e) => e.email == email).forEach((element) {
       if (element.password == password) {
         userModel = element;
@@ -28,9 +30,14 @@ class LoginCubit extends Cubit<LoginState> {
     if (userModel == null) {
       emit(LoginFailure('Somthing is wrong'));
     } else {
-      Hive.box(kSettingsBox).put(
+      await Hive.box(kSettingsBox).put(
         'user',
-        userModel,
+        UserModel(
+            id: userModel!.id,
+            name: userModel!.name,
+            email: userModel!.email,
+            password: userModel!.password,
+            profileImageUrl: userModel!.profileImageUrl),
       );
       emit(LoginSuccess(userModel!));
     }

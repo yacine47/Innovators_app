@@ -1,12 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
+import 'package:hive/hive.dart';
+import 'package:intl/intl.dart';
 import 'package:linkdin_app/constatns.dart';
-import 'package:linkdin_app/core/functions/date_format.dart';
-import 'package:linkdin_app/core/models/comment_model.dart';
 import 'package:linkdin_app/core/models/post_model.dart';
-
-// ... your existing imports
-import 'package:intl/intl.dart'; // For formatting date if needed
+import 'package:linkdin_app/core/models/comment_model.dart';
 
 class PostCard extends StatefulWidget {
   const PostCard({super.key, required this.postModel});
@@ -48,6 +45,10 @@ class _PostCardState extends State<PostCard> {
     }
   }
 
+  String formattedCreatedAt(DateTime dateTime) {
+    return DateFormat('MMM dd, yyyy – hh:mm a').format(dateTime);
+  }
+
   @override
   Widget build(BuildContext context) {
     final user = Hive.box(kSettingsBox).get('user');
@@ -58,26 +59,25 @@ class _PostCardState extends State<PostCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header (unchanged)
+          /// Header
           Padding(
             padding: EdgeInsets.all(10.0),
             child: Row(
-              children: <Widget>[
+              children: [
                 CircleAvatar(
                   backgroundImage: NetworkImage(widget.postModel.userAvatar),
                 ),
                 SizedBox(width: 10),
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: <Widget>[
+                  children: [
                     Text(
                       widget.postModel.username,
-                      style:
-                          TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+                      style: TextStyle(fontWeight: FontWeight.w600),
                     ),
                     Text(
                       formattedCreatedAt(widget.postModel.createdAt),
-                      style: TextStyle(fontSize: 12.0, color: Colors.grey),
+                      style: TextStyle(fontSize: 12, color: Colors.grey),
                     ),
                   ],
                 ),
@@ -85,17 +85,17 @@ class _PostCardState extends State<PostCard> {
             ),
           ),
 
-          // Caption
+          /// Caption
           if (widget.postModel.caption.isNotEmpty)
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 10),
               child: Text(widget.postModel.caption),
             ),
 
-          // Image
+          /// Image
           if (widget.postModel.imageUrl != null)
             Padding(
-              padding: EdgeInsets.only(top: 10),
+              padding: const EdgeInsets.only(top: 10),
               child: FadeInImage(
                 image: NetworkImage(widget.postModel.imageUrl!),
                 placeholder: NetworkImage(widget.postModel.imageUrl!),
@@ -104,44 +104,70 @@ class _PostCardState extends State<PostCard> {
 
           SizedBox(height: 10),
 
-          // Like + Comment counts
+          /// Donation or Idea Progress Section
+          if (widget.postModel.category.toLowerCase() == 'donate' ||
+              widget.postModel.category.toLowerCase() == 'idea')
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    "Raised: \$${widget.postModel.raisedAmount?.toStringAsFixed(2) ?? "0"} / \$${widget.postModel.targetAmount?.toStringAsFixed(2) ?? "0"}",
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  SizedBox(height: 4),
+                  LinearProgressIndicator(
+                    value: (widget.postModel.raisedAmount ?? 0) /
+                        (widget.postModel.targetAmount ?? 1),
+                    backgroundColor: Colors.grey[300],
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                      (widget.postModel.raisedAmount ?? 0) >=
+                              (widget.postModel.targetAmount ?? 1)
+                          ? Colors.green
+                          : Colors.blue,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    "Status: ${widget.postModel.status ?? "Open"}",
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: (widget.postModel.status ?? "").toLowerCase() ==
+                                "closed"
+                            ? Colors.red
+                            : Colors.green),
+                  ),
+                ],
+              ),
+            ),
+
+          SizedBox(height: 10),
+
+          /// Likes & Comments count
           Padding(
             padding: EdgeInsets.symmetric(horizontal: 10.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
-                  children: <Widget>[
-                    Container(
-                      height: 17,
-                      width: 17,
-                      decoration: BoxDecoration(
-                        color: Colors.blue,
-                        borderRadius: BorderRadius.circular(50),
-                      ),
-                      child:
-                          Icon(Icons.thumb_up, size: 12, color: Colors.white),
-                    ),
+                  children: [
+                    Icon(Icons.thumb_up, size: 16, color: Colors.blue),
                     SizedBox(width: 4),
-                    Text(
-                      widget.postModel.likes.length.toString(),
-                      style: TextStyle(fontSize: 13),
-                    )
+                    Text(widget.postModel.likes.length.toString()),
                   ],
                 ),
-                Text(
-                  "${widget.postModel.comments.length} comments",
-                  style: TextStyle(color: Colors.grey[700], fontSize: 12),
-                ),
+                Text("${widget.postModel.comments.length} comments",
+                    style: TextStyle(color: Colors.grey)),
               ],
             ),
           ),
 
-          Divider(height: 20),
+          Divider(),
 
-          // Like & Comment Buttons
+          /// Like & Comment buttons
           Row(
-            children: <Widget>[
+            children: [
               Expanded(
                 child: GestureDetector(
                   onTap: () {
@@ -156,23 +182,19 @@ class _PostCardState extends State<PostCard> {
                   },
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
-                      Icon(
-                        Icons.thumb_up_outlined,
-                        size: 20,
-                        color: widget.postModel.likes.contains(user)
-                            ? Colors.blue
-                            : Colors.black,
-                      ),
-                      SizedBox(width: 5),
+                    children: [
+                      Icon(Icons.thumb_up_outlined,
+                          color: widget.postModel.likes.contains(user)
+                              ? Colors.blue
+                              : Colors.black),
+                      SizedBox(width: 4),
                       Text(
                         "Like",
                         style: TextStyle(
-                          color: widget.postModel.likes.contains(user)
-                              ? Colors.blue
-                              : Colors.black,
-                        ),
-                      ),
+                            color: widget.postModel.likes.contains(user)
+                                ? Colors.blue
+                                : Colors.black),
+                      )
                     ],
                   ),
                 ),
@@ -182,9 +204,9 @@ class _PostCardState extends State<PostCard> {
                   onTap: _toggleCommentField,
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
-                    children: <Widget>[
+                    children: [
                       Icon(Icons.message_outlined),
-                      SizedBox(width: 5),
+                      SizedBox(width: 4),
                       Text("Comment"),
                     ],
                   ),
@@ -193,10 +215,10 @@ class _PostCardState extends State<PostCard> {
             ],
           ),
 
-          // Comment input
+          /// Comment Input Field
           if (showCommentField)
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.all(10.0),
               child: Row(
                 children: [
                   Expanded(
@@ -207,10 +229,8 @@ class _PostCardState extends State<PostCard> {
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
+                        contentPadding:
+                            EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                       ),
                     ),
                   ),
@@ -222,7 +242,7 @@ class _PostCardState extends State<PostCard> {
               ),
             ),
 
-          // Comments list
+          /// Comments List
           if (widget.postModel.comments.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0),
@@ -252,15 +272,11 @@ class _PostCardState extends State<PostCard> {
                                 Text(
                                   comment.userModel.name,
                                   style: TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 13,
-                                  ),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13),
                                 ),
                                 SizedBox(height: 4),
-                                Text(
-                                  comment.comment,
-                                  style: TextStyle(fontSize: 14),
-                                ),
+                                Text(comment.comment),
                                 SizedBox(height: 4),
                                 Text(
                                   formattedCreatedAt(comment.createdAt),

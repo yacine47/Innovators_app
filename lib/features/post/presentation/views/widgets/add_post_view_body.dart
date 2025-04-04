@@ -19,19 +19,49 @@ class AddPostViewBody extends StatefulWidget {
 }
 
 class _AddPostViewBodyState extends State<AddPostViewBody> {
-  GlobalKey<FormState> formKey = GlobalKey();
-
+  final GlobalKey<FormState> formKey = GlobalKey();
   AutovalidateMode autovalidateMode = AutovalidateMode.disabled;
+
   String? decription;
+  String selectedCategory = 'Simple Post'; // default option
+  String? raisedAmount;
+  String? targetAmount;
+
+  final List<String> postCategories = [
+    'Simple Post',
+    'Investment',
+    'Donation',
+  ];
+
   @override
   Widget build(BuildContext context) {
     final double h = MediaQuery.sizeOf(context).height;
+
     return Form(
       key: formKey,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: kPaddingHorizontal),
         child: Column(
           children: [
+            SizedBox(height: h * 0.02),
+            DropdownButtonFormField<String>(
+              value: selectedCategory,
+              decoration: InputDecoration(
+                border: OutlineInputBorder(),
+                labelText: 'Select Post Type',
+              ),
+              items: postCategories
+                  .map((type) => DropdownMenuItem(
+                        value: type,
+                        child: Text(type),
+                      ))
+                  .toList(),
+              onChanged: (value) {
+                setState(() {
+                  selectedCategory = value!;
+                });
+              },
+            ),
             SizedBox(height: h * 0.02),
             Expanded(
               child: SingleChildScrollView(
@@ -46,12 +76,38 @@ class _AddPostViewBodyState extends State<AddPostViewBody> {
                         decription = value;
                       },
                     ),
+                    // Show fields only if the selected category is Investment or Donation
+                    if (selectedCategory == 'Investment' ||
+                        selectedCategory == 'Donation')
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: CustomTextFormField(
+                          borderColor: Colors.transparent,
+                          hint: 'Raised Amount',
+                          keyboardType: TextInputType.number,
+                          onSaved: (value) {
+                            raisedAmount = value;
+                          },
+                        ),
+                      ),
+                    if (selectedCategory == 'Investment' ||
+                        selectedCategory == 'Donation')
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8.0),
+                        child: CustomTextFormField(
+                          borderColor: Colors.transparent,
+                          hint: 'Target Amount',
+                          keyboardType: TextInputType.number,
+                          onSaved: (value) {
+                            targetAmount = value;
+                          },
+                        ),
+                      ),
                   ],
                 ),
               ),
             ),
             SizedBox(height: h * 0.02),
-            // UploadImageWidget(),
             SizedBox(height: h * 0.03),
             BlocConsumer<PostCubit, PostState>(
               listener: (context, state) {
@@ -64,28 +120,30 @@ class _AddPostViewBodyState extends State<AddPostViewBody> {
                   onPressed: () async {
                     if (formKey.currentState!.validate()) {
                       formKey.currentState!.save();
-                      // BlocProvider.of<LoginCubit>(context).login(
-                      //   email: email!,
-                      //   password: password!,
-                      // );
 
                       await Hive.box<PostModel>(kPostsBox).add(
                         PostModel(
-                            id: 0.toString(),
-                            userId: Hive.box(kSettingsBox).get('user').id,
-                            caption: decription!,
-                            imageUrl: null,
-                            comments: [],
-                            likes: [],
-                            isSimplePost: true,
-                            createdAt: DateTime.now(),
-                            usersInv: [],
-                            username: Hive.box(kSettingsBox).get('user').name,
-                            userAvatar: Hive.box(kSettingsBox)
-                                .get('user')
-                                .profileImageUrl,
-                            category: ''),
+                          id: 0.toString(),
+                          userId: Hive.box(kSettingsBox).get('user').id,
+                          caption: decription!,
+                          imageUrl: null,
+                          comments: [],
+                          likes: [],
+                          isSimplePost: selectedCategory == 'Simple Post',
+                          createdAt: DateTime.now(),
+                          usersInv: [],
+                          username: Hive.box(kSettingsBox).get('user').name,
+                          userAvatar: Hive.box(kSettingsBox)
+                              .get('user')
+                              .profileImageUrl,
+                          category: selectedCategory, // Save the selected type
+                          raisedAmount: double.tryParse(raisedAmount ??
+                              ''), // Save the raised amount if any
+                          targetAmount: double.tryParse(targetAmount ??
+                              ''), // Save the target amount if any
+                        ),
                       );
+
                       BlocProvider.of<PostCubit>(context).getData();
                     } else {
                       setState(() {

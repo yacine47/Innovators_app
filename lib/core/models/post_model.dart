@@ -43,20 +43,35 @@ class PostModel extends HiveObject {
   @HiveField(11)
   final String category;
 
-  PostModel({
-    required this.id,
-    required this.userId,
-    required this.caption,
-    required this.imageUrl,
-    required this.comments,
-    required this.likes,
-    required this.isSimplePost,
-    required this.createdAt,
-    required this.usersInv,
-    required this.username,
-    required this.userAvatar,
-    required this.category,
-  });
+  @HiveField(12)
+  final double? targetAmount;
+
+  @HiveField(13)
+  double? raisedAmount;
+
+  @HiveField(14)
+  String? status;
+
+  @HiveField(15)
+  String? postType; // 'normal', 'donate', 'idea'
+
+  PostModel(
+      {required this.id,
+      required this.userId,
+      required this.caption,
+      required this.imageUrl,
+      required this.comments,
+      required this.likes,
+      required this.isSimplePost,
+      required this.createdAt,
+      required this.usersInv,
+      required this.username,
+      required this.userAvatar,
+      required this.category,
+      this.postType,
+      this.raisedAmount,
+      this.status,
+      this.targetAmount});
 }
 
 List<PostModel> posts = [

@@ -16,10 +16,12 @@ class PostCard extends StatefulWidget {
 class _PostCardState extends State<PostCard> {
   bool showCommentField = false;
   final TextEditingController _commentController = TextEditingController();
+  final ScrollController _commentScrollController = ScrollController();
 
   @override
   void dispose() {
     _commentController.dispose();
+    _commentScrollController.dispose();
     super.dispose();
   }
 
@@ -39,9 +41,20 @@ class _PostCardState extends State<PostCard> {
       ));
       widget.postModel.save();
       _commentController.clear();
+      _scrollToBottom();
       setState(() {
         showCommentField = false;
       });
+    }
+  }
+
+  void _scrollToBottom() {
+    if (_commentScrollController.hasClients) {
+      _commentScrollController.animateTo(
+        _commentScrollController.position.maxScrollExtent,
+        duration: Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
     }
   }
 
@@ -118,8 +131,11 @@ class _PostCardState extends State<PostCard> {
                   ),
                   SizedBox(height: 4),
                   LinearProgressIndicator(
-                    value: (widget.postModel.raisedAmount ?? 0) /
-                        (widget.postModel.targetAmount ?? 1),
+                    value: (widget.postModel.targetAmount != null &&
+                            widget.postModel.targetAmount != 0)
+                        ? (widget.postModel.raisedAmount ?? 0) /
+                            (widget.postModel.targetAmount ?? 1)
+                        : 0,
                     backgroundColor: Colors.grey[300],
                     valueColor: AlwaysStoppedAnimation<Color>(
                       (widget.postModel.raisedAmount ?? 0) >=
@@ -169,8 +185,8 @@ class _PostCardState extends State<PostCard> {
           Row(
             children: [
               Expanded(
-                child: GestureDetector(
-                  onTap: () {
+                child: IconButton(
+                  onPressed: () {
                     setState(() {
                       if (widget.postModel.likes.contains(user)) {
                         widget.postModel.likes.remove(user);
@@ -180,29 +196,32 @@ class _PostCardState extends State<PostCard> {
                       widget.postModel.save();
                     });
                   },
-                  child: Row(
+                  icon: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.thumb_up_outlined,
-                          color: widget.postModel.likes.contains(user)
-                              ? Colors.blue
-                              : Colors.black),
+                      Icon(
+                        Icons.thumb_up_outlined,
+                        color: widget.postModel.likes.contains(user)
+                            ? Colors.blue
+                            : Colors.black,
+                      ),
                       SizedBox(width: 4),
                       Text(
                         "Like",
                         style: TextStyle(
-                            color: widget.postModel.likes.contains(user)
-                                ? Colors.blue
-                                : Colors.black),
-                      )
+                          color: widget.postModel.likes.contains(user)
+                              ? Colors.blue
+                              : Colors.black,
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
               Expanded(
-                child: GestureDetector(
-                  onTap: _toggleCommentField,
-                  child: Row(
+                child: IconButton(
+                  onPressed: _toggleCommentField,
+                  icon: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.message_outlined),
@@ -246,8 +265,12 @@ class _PostCardState extends State<PostCard> {
           if (widget.postModel.comments.isNotEmpty)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12.0),
-              child: Column(
-                children: widget.postModel.comments.map((comment) {
+              child: ListView.builder(
+                shrinkWrap: true,
+                controller: _commentScrollController,
+                itemCount: widget.postModel.comments.length,
+                itemBuilder: (context, index) {
+                  final comment = widget.postModel.comments[index];
                   return Padding(
                     padding: const EdgeInsets.symmetric(vertical: 8.0),
                     child: Row(
@@ -290,7 +313,7 @@ class _PostCardState extends State<PostCard> {
                       ],
                     ),
                   );
-                }).toList(),
+                },
               ),
             ),
         ],

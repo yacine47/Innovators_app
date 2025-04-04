@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:linkdin_app/core/utils/service_locator.dart';
 import 'package:linkdin_app/features/auth/data/repo/auth_repo_impl.dart';
 import 'package:linkdin_app/features/auth/presentation/view_models/login_cubit/login_cubit.dart';
+import 'package:linkdin_app/features/auth/presentation/view_models/sign_up_cubit/sign_up_cubit.dart';
 import 'package:linkdin_app/features/splash/presentation/views/splash_view.dart';
 import 'package:linkdin_app/features/views/introduction_view.dart';
 import 'package:linkdin_app/features/donate/presentation/views/donate_view.dart';
@@ -41,7 +42,10 @@ abstract class AppRouter {
       ),
       GoRoute(
         path: SignUpView.path,
-        builder: (context, state) => const SignUpView(),
+        builder: (context, state) => BlocProvider(
+          create: (context) => SignUpCubit(),
+          child: const SignUpView(),
+        ),
       ),
       GoRoute(
         path: DonateView.path,

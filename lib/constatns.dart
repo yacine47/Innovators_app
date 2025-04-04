@@ -55,6 +55,7 @@ const String kStayAwakeKey = "stayAwakeKey";
 // Hive Boxes
 const String kSettingsBox = "settings";
 const String kPostsBox = "posts";
+const String kUsersBox = "kUsersBox";
 const String kFavoriteCurrencyBox = "favoriteCurrency";
 const String kHistoryBox = "history";
 const String kCurrenciesListBox = "currenciesList";

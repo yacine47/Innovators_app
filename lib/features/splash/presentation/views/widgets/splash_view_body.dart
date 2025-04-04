@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:hive_flutter/hive_flutter.dart';
 import 'package:linkdin_app/constatns.dart';
 import 'package:linkdin_app/core/models/post_model.dart';
+import 'package:linkdin_app/core/models/user_model.dart';
 import 'package:linkdin_app/core/utils/app_assets.dart';
 import 'package:linkdin_app/features/home/presentation/views/home_view.dart';
 import 'package:linkdin_app/features/views/introduction_view.dart';
@@ -35,6 +36,7 @@ class _SplashViewBodyState extends State<SplashViewBody> {
 
   Future<void> initHive() async {
     await Hive.openBox<PostModel>(kPostsBox);
+    await Hive.openBox<UserModel>(kUsersBox);
   }
 
   @override

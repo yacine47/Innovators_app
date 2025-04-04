@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:linkdin_app/constatns.dart';
 import 'package:linkdin_app/core/widgets/custom_button.dart';
 import 'package:linkdin_app/features/profile/presentation/views/setting_items_list_view.dart';
@@ -91,7 +92,8 @@ class AccountViewBody extends StatelessWidget {
                 CustomButton(
                   title: 'Logout',
                   // isLoading: state is LogoutLoading,
-                  onPressed: () {
+                  onPressed: () async {
+                    await Hive.box(kSettingsBox).put('user', null);
                     GoRouter.of(context).go(LoginView.path);
                     // BlocProvider.of<LogoutCubit>(context).logout();
                   },
